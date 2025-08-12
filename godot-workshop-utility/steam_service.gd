@@ -5,8 +5,8 @@ signal tags_set(tags)
 
 const STEAM_WORKSHOP_AGREEMENT_URL: String = "https://steamcommunity.com/sharedfiles/workshoplegalagreement"
 
-var steam_app_id: int = -1
-var steam_workshop_tags: Array = []
+@export var steam_app_id: int = -1
+@export var steam_workshop_tags: Array = []
 
 
 func initialize() -> void:
@@ -24,8 +24,8 @@ func initialize() -> void:
 		var file_content: Dictionary = test_json_conv.get_data()
 		file.close()
 		
-		if !file_content.has("app_id"):
-			emit_signal("log_message", "The steam_data file does not contain an app ID, mod uploading will not work.")
+		if !file_content.has("app_id") and steam_app_id == -1:
+			emit_signal("log_message", "The steam_data file does not contain an app ID, mod uploading will may not work.")
 			return
 		
 		if file_content.has("tags"):
@@ -33,7 +33,7 @@ func initialize() -> void:
 			emit_signal("tags_set", steam_workshop_tags)
 		
 		steam_app_id = file_content.app_id as int
-	else:
+	elif steam_app_id == -1:
 		emit_signal("log_message", "Can't open steam_data file %s. Please make sure the file exists and is valid." % (game_install_directory + "steam_data.json"))
 
 
