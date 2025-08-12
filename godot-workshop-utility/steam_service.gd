@@ -6,7 +6,7 @@ signal tags_set(tags)
 const STEAM_WORKSHOP_AGREEMENT_URL: String = "https://steamcommunity.com/sharedfiles/workshoplegalagreement"
 
 @export var steam_app_id: int = -1
-@export var steam_workshop_tags: Array = []
+@export var steam_workshop_tags: Array[String] = []
 
 
 func initialize() -> void:
@@ -35,6 +35,8 @@ func initialize() -> void:
 		steam_app_id = file_content.app_id as int
 	elif steam_app_id == -1:
 		emit_signal("log_message", "Can't open steam_data file %s. Please make sure the file exists and is valid." % (game_install_directory + "steam_data.json"))
+	if steam_workshop_tags != []:
+		emit_signal("tags_set", steam_workshop_tags)
 
 
 func get_game_dir() -> String:
