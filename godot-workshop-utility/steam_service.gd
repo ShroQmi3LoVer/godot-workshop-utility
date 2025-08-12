@@ -10,17 +10,18 @@ var steam_workshop_tags: Array = []
 
 
 func initialize() -> void:
-	var INIT: Dictionary = Steam.steamInit()
-	
-	if (INIT): emit_signal("log_message", "Steam initialization OK!")
-	else: emit_signal("log_message", "Steam could not initialize: %s", str(INIT))
+	var INIT: Dictionary = Steam.steamInitEx()
+	if (INIT): emit_signal("log_message", "Steam initialization OK!") 
+	else: emit_signal("log_message", "Steam could not initialize: %s" % str(INIT))
 	
 	var game_install_directory := get_game_dir()
 	
-	var file = File.new()
+	var file := FileAccess.open(game_install_directory + "steam_data.json", FileAccess.READ)
 	
-	if file.open(game_install_directory.plus_file("steam_data.json"), File.READ) == OK:
-		var file_content: Dictionary = parse_json(file.get_as_text())
+	if file:
+		var test_json_conv = JSON.new()
+		test_json_conv.parse(file.get_as_text())
+		var file_content: Dictionary = test_json_conv.get_data()
 		file.close()
 		
 		if !file_content.has("app_id"):
@@ -33,7 +34,7 @@ func initialize() -> void:
 		
 		steam_app_id = file_content.app_id as int
 	else:
-		emit_signal("log_message", "Can't open steam_data file %s. Please make sure the file exists and is valid." % game_install_directory.plus_file("steam_data.json"))
+		emit_signal("log_message", "Can't open steam_data file %s. Please make sure the file exists and is valid." % (game_install_directory + "steam_data.json"))
 
 
 func get_game_dir() -> String:

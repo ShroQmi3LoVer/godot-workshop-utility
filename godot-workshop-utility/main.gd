@@ -3,35 +3,37 @@ extends PanelContainer
 
 const MOD_LOADER_URL = "https://github.com/GodotModding/godot-mod-loader"
 
-export var max_tags := 5
+@export var max_tags := 5
 
 var tag_dict := {}
+@onready var SteamService = $SteamService
 
-onready var _file_dialog = $"%FileDialog" as FileDialog
-onready var _preview_image_dialog = $"%PreviewImageDialog" as FileDialog
-onready var _file_line_edit = $"%FileLineEdit" as LineEdit
-onready var _workshop_id_line_edit = $"%WorkshopIDLineEdit" as LineEdit
-onready var _preview_line_edit = $"%PreviewLineEdit" as LineEdit
-onready var _scroll_container = $"%ScrollContainer" as ScrollContainer
-onready var _scrollbar = $"%ScrollContainer".get_v_scrollbar()
-onready var _console = $"%Console" as TextEdit
-onready var _console_content = $"%ConsoleContent" as Label
-onready var _tag_list = $"%TagList" as ItemList
-onready var _tag_container = $"%TagContainer" as VBoxContainer
-onready var _upload_container = $"%UploadContainer" as VBoxContainer
-onready var _tag_label = $"%TagLabel" as Label
+@onready var _file_dialog = $"%FileDialog" as FileDialog
+@onready var _preview_image_dialog = $"%PreviewImageDialog" as FileDialog
+@onready var _file_line_edit = $"%FileLineEdit" as LineEdit
+@onready var _workshop_id_line_edit = $"%WorkshopIDLineEdit" as LineEdit
+@onready var _preview_line_edit = $"%PreviewLineEdit" as LineEdit
+@onready var _scroll_container = $"%ScrollContainer" as ScrollContainer
+@onready var _scrollbar = $"%ScrollContainer".get_v_scroll_bar()
+@warning_ignore("unused_private_class_variable")
+@onready var _console = $"%Console" as TextEdit
+@onready var _console_content = $"%ConsoleContent" as Label
+@onready var _tag_list = $"%TagList" as ItemList
+@onready var _tag_container = $"%TagContainer" as VBoxContainer
+@onready var _upload_container = $"%UploadContainer" as VBoxContainer
+@onready var _tag_label = $"%TagLabel" as Label
 
 
 func _ready() -> void:
 	_tag_container.hide()
 	_upload_container.size_flags_horizontal = SIZE_SHRINK_CENTER
 	
-	SteamService.connect("log_message", self, "log_in_console")
-	SteamService.connect("tags_set", self, "on_tags_set")
+	SteamService.connect("log_message", Callable(self, "log_in_console"))
+	SteamService.connect("tags_set", Callable(self, "on_tags_set"))
 	SteamService.initialize()
 	
-	var _error_create = Steam.connect("item_created", self, "on_workshop_mod_created")
-	var _error_update = Steam.connect("item_updated", self, "on_workshop_mod_updated")
+	var _error_create = Steam.connect("item_created", Callable(self, "on_workshop_mod_created"))
+	var _error_update = Steam.connect("item_updated", Callable(self, "on_workshop_mod_updated"))
 
 
 func log_in_console(msg: String) -> void:
@@ -75,10 +77,9 @@ func update_workshop_item() -> void:
 	
 	Steam.setItemTitle(update_handle, _file_line_edit.text.get_basename().get_file())
 	
-	var file = File.new()
 	var preview_path = ProjectSettings.globalize_path(_preview_line_edit.text)
 	
-	if file.file_exists(preview_path):
+	if FileAccess.file_exists(preview_path):
 		Steam.setItemPreview(update_handle, preview_path)
 	
 	if _tag_list.get_selected_items().size() > 0:
@@ -97,20 +98,20 @@ func update_workshop_item() -> void:
 		Steam.setItemTags(update_handle, tag_names)
 	
 	var abs_path = ProjectSettings.globalize_path(_file_line_edit.text)
+	@warning_ignore("unused_variable")
 	var content = Steam.setItemContent(update_handle, abs_path)
 	
 	Steam.submitItemUpdate(update_handle, "")
 
 
 func on_workshop_mod_created(result: int, file_id: int, needs_to_accept_agreement: bool) -> void:
-	
 	if result == 1:
 		log_in_console("Workshop item created successfully. Please take note of the generated workshop ID.")
 	else:
 		log_in_console("Workshop item could not be created.")
 		
 	if needs_to_accept_agreement:
-		Steam.activateGameOverlayToWebPage(SteamService.STEAM_WORKSHOP_AGREEMENT_URL)
+		Steam.activateGameOverlayToWebPage(SteamService.STEAM_WORKSHOP_AGREEMENT_URL, Steam.OVERLAY_TO_WEB_PAGE_MODE_MODAL)
 	
 	_workshop_id_line_edit.text = str(file_id)
 	
@@ -122,12 +123,12 @@ func on_workshop_mod_updated(result: int, needs_to_accept_agreement: bool) -> vo
 	else: log_in_console("Item upload has failed.")
 	
 	if needs_to_accept_agreement:
-		Steam.activateGameOverlayToWebPage(SteamService.STEAM_WORKSHOP_AGREEMENT_URL)
+		Steam.activateGameOverlayToWebPage(SteamService.STEAM_WORKSHOP_AGREEMENT_URL, Steam.OVERLAY_TO_WEB_PAGE_MODE_MODAL)
 
 
 func _on_FileDialog_file_selected(path: String) -> void:
-	if path.get_extension() != "zip" && path.get_extension() != "pck":
-		log_in_console("Please select a .zip or .pck file")
+	if path.get_extension() != "zip":
+		log_in_console("Please select a .zip file")
 		return
 	
 	_file_line_edit.text = path
@@ -135,7 +136,7 @@ func _on_FileDialog_file_selected(path: String) -> void:
 
 func _on_PreviewImageDialog_file_selected(path: String) -> void:
 	if path.get_extension() != "png" && path.get_extension() != "jpg" && path.get_extension() != "jpeg":
-		log_in_console("Please select an image (.png, .jpg or .jpeg)")
+		log_in_console("Please select an image (.png/.jpg/.jpeg)")
 		return
 	
 	_preview_line_edit.text = path
@@ -149,9 +150,11 @@ func _on_SelectPreviewButton_pressed() -> void:
 	_preview_image_dialog.popup()
 
 
+@warning_ignore("unused_parameter")
 func _on_Instructions_meta_clicked(meta) -> void:
 	OS.shell_open(MOD_LOADER_URL)
 
 
+@warning_ignore("unused_parameter")
 func _on_TermsOfServiceLabel_meta_clicked(meta) -> void:
-	Steam.activateGameOverlayToWebPage(SteamService.STEAM_WORKSHOP_AGREEMENT_URL)
+	Steam.activateGameOverlayToWebPage(SteamService.STEAM_WORKSHOP_AGREEMENT_URL, Steam.OVERLAY_TO_WEB_PAGE_MODE_MODAL)
