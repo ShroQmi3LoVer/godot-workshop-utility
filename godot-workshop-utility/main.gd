@@ -3,8 +3,6 @@ extends PanelContainer
 
 const MOD_LOADER_URL = "https://github.com/GodotModding/godot-mod-loader"
 
-@export var max_tags := 5
-
 var tag_dict := {}
 @onready var SteamService = $SteamService
 
@@ -15,13 +13,10 @@ var tag_dict := {}
 @onready var _preview_line_edit = $"%PreviewLineEdit" as LineEdit
 @onready var _scroll_container = $"%ScrollContainer" as ScrollContainer
 @onready var _scrollbar = $"%ScrollContainer".get_v_scroll_bar()
-@warning_ignore("unused_private_class_variable")
-@onready var _console = $"%Console" as TextEdit
 @onready var _console_content = $"%ConsoleContent" as Label
 @onready var _tag_list = $"%TagList" as ItemList
 @onready var _tag_container = $"%TagContainer" as VBoxContainer
 @onready var _upload_container = $"%UploadContainer" as VBoxContainer
-@onready var _tag_label = $"%TagLabel" as Label
 
 
 func _ready() -> void:
@@ -51,7 +46,6 @@ func log_in_console(msg: String) -> void:
 func on_tags_set(tags: Array) -> void:
 	_tag_container.show()
 	_upload_container.size_flags_horizontal = SIZE_FILL
-	_tag_label.text += " (%s max)" % [max_tags]
 	
 	for i in tags.size():
 		tag_dict[i] = tags[i]
@@ -84,22 +78,15 @@ func update_workshop_item() -> void:
 	
 	if _tag_list.get_selected_items().size() > 0:
 		var tag_names = []
-		var nb_tags_added = 0
 		
 		for selected_tag in _tag_list.get_selected_items():
 			
-			if nb_tags_added >= max_tags:
-				log_in_console("You've selected too many tags, only " + str(max_tags) + " of them have been added.")
-				break
-			
-			nb_tags_added += 1
 			tag_names.push_back(tag_dict[selected_tag])
 		
 		Steam.setItemTags(update_handle, tag_names)
 	
 	var abs_path = ProjectSettings.globalize_path(_file_line_edit.text)
-	@warning_ignore("unused_variable")
-	var content = Steam.setItemContent(update_handle, abs_path)
+	Steam.setItemContent(update_handle, abs_path)
 	
 	Steam.submitItemUpdate(update_handle, "")
 
@@ -150,11 +137,9 @@ func _on_SelectPreviewButton_pressed() -> void:
 	_preview_image_dialog.popup()
 
 
-@warning_ignore("unused_parameter")
-func _on_Instructions_meta_clicked(meta) -> void:
+func _on_Instructions_meta_clicked(_meta) -> void:
 	OS.shell_open(MOD_LOADER_URL)
 
 
-@warning_ignore("unused_parameter")
-func _on_TermsOfServiceLabel_meta_clicked(meta) -> void:
+func _on_TermsOfServiceLabel_meta_clicked(_meta) -> void:
 	Steam.activateGameOverlayToWebPage(SteamService.STEAM_WORKSHOP_AGREEMENT_URL, Steam.OVERLAY_TO_WEB_PAGE_MODE_MODAL)
